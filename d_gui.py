@@ -120,7 +120,7 @@ class YoutubeDownloader(QtWidgets.QWidget):
                     url = layout.itemAt(i).widget().text()
                 # Get checkbox
                 if type(layout.itemAt(i).widget()) == QtWidgets.QCheckBox:
-                    ext = "mp3" if layout.itemAt(i).widget().toggled else "mp4"
+                    ext = "mp3" if layout.itemAt(i).widget().isChecked() else "mp4"
 
             # add url to the right list
             if "playlist" in url:
@@ -138,8 +138,8 @@ class YoutubeDownloader(QtWidgets.QWidget):
                     self.dest_path,
                     url_dict["videos"][video]
                 )
-            except Exception:
-                print("%s failed to download" % video)
+            except Exception as error:
+                print("%s failed to download (%s)" % (video, error))
 
         # download playlists
         for playlist in url_dict["playlists"].keys():
@@ -149,8 +149,8 @@ class YoutubeDownloader(QtWidgets.QWidget):
                     self.dest_path,
                     url_dict["playlists"][playlist]
                 )
-            except Exception:
-                print("%s failed to download" % playlist)
+            except Exception as error:
+                print("%s failed to download (%s)" % (video, error))
 
     def remove_input(self, layout):
         if len(self.inputs.children()) > 1:

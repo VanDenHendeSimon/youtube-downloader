@@ -10,6 +10,64 @@ from PySide2 import QtWidgets, QtCore
 qt_app = QtWidgets.QApplication(sys.argv)
 
 
+def convert_video(video_path):
+    mp3 = "%s.mp3" % video_path.rstrip(".mp4")
+    ffmpeg = ("ffmpeg -i \"%s\" \"%s\" " % (video_path, mp3))
+    subprocess.call(ffmpeg, shell=True)
+
+    # remove originally downloaded video
+    os.remove(video_path)
+
+
+def download_playlist(link, dest_path):
+    playlist = pytube.Playlist(link)
+
+    # Get files in the destination folder before downloading
+    files_in_dest_folder = os.listdir(dest_path)
+
+    playlist.download_all(dest_path)
+
+    # wait a second to ensure last video is ready to convert to mp3
+    time.sleep(1)
+
+    # Get files in the destination folder after downloading
+    updated_files = os.listdir(dest_path)
+
+    # Fetch file paths of newly downloaded files
+    new_files = [
+        "%s/%s" % (dest_path, f)
+        for f in updated_files
+        if f not in files_in_dest_folder
+    ]
+    # Convert them to mp3
+    for new_file in new_files:
+        convert_video(new_file)
+
+
+def download_video(link, dest_path):
+    # Get files in the destination folder before downloading
+    files_in_dest_folder = os.listdir(dest_path)
+
+    # Download video
+    yt = pytube.YouTube(link)
+
+    video = yt.streams.first()
+    video.download(dest_path)
+
+    # wait a second to ensure the video is ready to convert to mp3
+    time.sleep(1)
+
+    # Get files in the destination folder after downloading
+    updated_files = os.listdir(dest_path)
+    video_title = "unknown.mp4"
+    for _file in updated_files:
+        if _file not in files_in_dest_folder:
+            video_title = _file
+
+    if video_title != "unknown.mp4":
+        convert_video("%s/%s" % (dest_path, video_title))
+
+
 class YoutubeDownloader(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(YoutubeDownloader, self).__init__(parent)

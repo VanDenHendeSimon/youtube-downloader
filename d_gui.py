@@ -108,9 +108,23 @@ class YoutubeDownloader(QtWidgets.QWidget):
             "playlists": []
         }
 
+        # Process urls
         for layout in self.inputs.children():
             for i in range(layout.count()):
-                print(layout.itemAt(i).widget())
+                if type(layout.itemAt(i).widget()) == QtWidgets.QLineEdit:
+                    url = layout.itemAt(i).widget().text()
+            if "playlist" in url:
+                download_dict["playlists"].append(url)
+            else:
+                download_dict["videos"].append(url)
+
+        for key in download_dict.keys():
+            if key == "videos":
+                for video in download_dict["videos"]:
+                    download_video(video, self.dest_path)
+            if key == "playlists":
+                for playlist in download_dict["playlists"]:
+                    download_playlist(playlist, self.dest_path)
 
     def remove_input(self, layout):
         if len(self.inputs.children()) > 1:

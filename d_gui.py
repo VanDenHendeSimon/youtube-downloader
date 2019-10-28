@@ -9,8 +9,6 @@ import re
 from PySide2 import QtWidgets, QtCore, QtGui
 import tkinter
 
-qt_app = QtWidgets.QApplication(sys.argv)
-
 
 def convert_video(video_path):
     mp3 = "%s.mp3" % video_path.rstrip(".mp4")
@@ -78,7 +76,10 @@ class YoutubeDownloader(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(YoutubeDownloader, self).__init__(parent)
 
+        self.setWindowTitle("youtube downloader")
+
         self.dest_path = "D:/Simon/Music/"
+        self.feedback = []
 
         # UI Stuff
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -120,6 +121,8 @@ class YoutubeDownloader(QtWidgets.QWidget):
 
     def prepare_download(self):
         # init lists that will store all urls
+        # using dict I can also make sure
+        # there is only ever one entry for a given link
         url_dict = {
             "videos": {},
             "playlists": {}
@@ -141,8 +144,6 @@ class YoutubeDownloader(QtWidgets.QWidget):
             else:
                 url_dict["videos"][url] = ext
 
-        print(url_dict)
-
         # download videos
         for video in url_dict["videos"].keys():
             try:
@@ -151,8 +152,13 @@ class YoutubeDownloader(QtWidgets.QWidget):
                     self.dest_path,
                     url_dict["videos"][video]
                 )
+                self.feedback.append(
+                    "%s downloaded to %s" % (video, self.dest_path)
+                )
             except Exception as error:
-                print("%s failed to download (%s)" % (video, error))
+                self.feedback.append(
+                    "%s failed to download\n(%s)" % (video, error)
+                )
 
         # download playlists
         for playlist in url_dict["playlists"].keys():
@@ -162,8 +168,21 @@ class YoutubeDownloader(QtWidgets.QWidget):
                     self.dest_path,
                     url_dict["playlists"][playlist]
                 )
+                self.feedback.append(
+                    "%s downloaded to %s" % (video, self.dest_path)
+                )
             except Exception as error:
-                print("%s failed to download (%s)" % (video, error))
+                self.feedback.append(
+                    "%s failed to download (%s)" % (video, error)
+                )
+
+        feedback_box = QtWidgets.QMessageBox()
+
+        feedback_box.setWindowTitle("Feedback")
+        feedback_box.setText("\n\n".join(self.feedback))
+
+        feedback_box.exec_()
+        self.close()
 
     def remove_input(self, layout):
         if len(self.inputs.children()) > 1:
@@ -193,12 +212,13 @@ class YoutubeDownloader(QtWidgets.QWidget):
             lambda: self.remove_input(input_field_layout)
         )
 
-    def run(self):
-        # Show the window
-        self.show()
-        # Run the qt application
-        qt_app.exec_()
+
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    main = YoutubeDownloader()
+    main.show()
+    sys.exit(app.exec_())
 
 
-yt_downloader = YoutubeDownloader()
-yt_downloader.run()
+if __name__ == "__main__":
+    main()

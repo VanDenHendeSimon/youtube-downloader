@@ -1,2 +1,5 @@
 # youtube-downloader
-easily convert youtube videos to .mp3 files
+The objective of this desktop application is to download youtube videos as well as youtube playlists.
+
+I have made a nice GUI that lets users add urls, select a destination location and hit download.
+The videos are automatically converted to .mp3's

@@ -19,34 +19,37 @@ def convert_video(video_path):
     os.remove(video_path)
 
 
-def download_playlist(link, dest_path):
+def download_playlist(link, dest_path, ext):
     playlist = pytube.Playlist(link)
 
-    # Get files in the destination folder before downloading
-    files_in_dest_folder = os.listdir(dest_path)
+    if ext == "mp3":
+        # Get files in the destination folder before downloading
+        files_in_dest_folder = os.listdir(dest_path)
 
     playlist.download_all(dest_path)
 
-    # wait a second to ensure last video is ready to convert to mp3
-    time.sleep(1)
+    if ext == "mp3":
+        # wait a second to ensure last video is ready to convert to mp3
+        time.sleep(1)
 
-    # Get files in the destination folder after downloading
-    updated_files = os.listdir(dest_path)
+        # Get files in the destination folder after downloading
+        updated_files = os.listdir(dest_path)
 
-    # Fetch file paths of newly downloaded files
-    new_files = [
-        "%s/%s" % (dest_path, f)
-        for f in updated_files
-        if f not in files_in_dest_folder
-    ]
-    # Convert them to mp3
-    for new_file in new_files:
-        convert_video(new_file)
+        # Fetch file paths of newly downloaded files
+        new_files = [
+            "%s/%s" % (dest_path, f)
+            for f in updated_files
+            if f not in files_in_dest_folder
+        ]
+        # Convert them to mp3
+        for new_file in new_files:
+            convert_video(new_file)
 
 
-def download_video(link, dest_path):
-    # Get files in the destination folder before downloading
-    files_in_dest_folder = os.listdir(dest_path)
+def download_video(link, dest_path, ext):
+    if ext == "mp3":
+        # Get files in the destination folder before downloading
+        files_in_dest_folder = os.listdir(dest_path)
 
     # Download video
     yt = pytube.YouTube(link)
@@ -54,18 +57,19 @@ def download_video(link, dest_path):
     video = yt.streams.first()
     video.download(dest_path)
 
-    # wait a second to ensure the video is ready to convert to mp3
-    time.sleep(1)
+    if ext == "mp3":
+        # wait a second to ensure the video is ready to convert to mp3
+        time.sleep(1)
 
-    # Get files in the destination folder after downloading
-    updated_files = os.listdir(dest_path)
-    video_title = "unknown.mp4"
-    for _file in updated_files:
-        if _file not in files_in_dest_folder:
-            video_title = _file
+        # Get files in the destination folder after downloading
+        updated_files = os.listdir(dest_path)
+        video_title = "unknown.mp4"
+        for _file in updated_files:
+            if _file not in files_in_dest_folder:
+                video_title = _file
 
-    if video_title != "unknown.mp4":
-        convert_video("%s/%s" % (dest_path, video_title))
+        if video_title != "unknown.mp4":
+            convert_video("%s/%s" % (dest_path, video_title))
 
 
 class YoutubeDownloader(QtWidgets.QWidget):
@@ -102,29 +106,32 @@ class YoutubeDownloader(QtWidgets.QWidget):
         self.download_button.clicked.connect(self.prepare_download)
 
     def prepare_download(self):
-        # init dict that will store all urls
-        download_dict = {
-            "videos": [],
-            "playlists": []
+        # init lists that will store all urls
+        url_dict = {
+            "videos": {},
+            "playlists": {}
         }
 
-        # Process urls
+        # Process inputs
         for layout in self.inputs.children():
             for i in range(layout.count()):
+                # Get line edits (aka urls)
                 if type(layout.itemAt(i).widget()) == QtWidgets.QLineEdit:
                     url = layout.itemAt(i).widget().text()
-            if "playlist" in url:
-                download_dict["playlists"].append(url)
-            else:
-                download_dict["videos"].append(url)
 
-        for key in download_dict.keys():
-            if key == "videos":
-                for video in download_dict["videos"]:
-                    download_video(video, self.dest_path)
-            if key == "playlists":
-                for playlist in download_dict["playlists"]:
-                    download_playlist(playlist, self.dest_path)
+            # add url to the right list
+            if "playlist" in url:
+                url_dict["playlists"][url] = ".mp4"
+            else:
+                url_dict["videos"][url] = ".mp4"
+
+            # download videos
+            for video in url_dict["videos"].keys():
+                download_video(video, self.dest_path, url_dict["videos"][video])
+
+            # download playlists
+            for playlist in url_dict["playlists"].keys():
+                download_playlist(playlist, self.dest_path, url_dict["playlists"][video])
 
     def remove_input(self, layout):
         if len(self.inputs.children()) > 1:

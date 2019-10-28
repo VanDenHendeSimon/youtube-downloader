@@ -1,5 +1,6 @@
 # youtube-downloader
 The objective of this desktop application is to download youtube videos as well as youtube playlists.  
+  
 downloader.py is a proof of concept.  
 d_gui.py is a more sophisticated version, with a nice UI (see screenshot)   
   

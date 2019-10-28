@@ -7,7 +7,6 @@ import time
 import re
 
 from PySide2 import QtWidgets, QtCore, QtGui
-import tkinter
 
 
 def convert_video(video_path):

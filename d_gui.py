@@ -4,8 +4,10 @@ import os
 import sys
 import subprocess
 import time
+import re
 
-from PySide2 import QtWidgets, QtCore
+from PySide2 import QtWidgets, QtCore, QtGui
+import tkinter
 
 qt_app = QtWidgets.QApplication(sys.argv)
 
@@ -103,7 +105,19 @@ class YoutubeDownloader(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
+        self.browse_button.clicked.connect(self.browse)
         self.download_button.clicked.connect(self.prepare_download)
+
+    def browse(self):
+
+        file_dialog = QtWidgets.QFileDialog(self)
+        file_dialog.setDirectory(self.dest_path)
+        file_dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)
+
+        if file_dialog.exec_() == QtWidgets.QDialog.Accepted:
+            self.dest_path = file_dialog.selectedUrls()[0].toString().strip("file:///")
+
+        self.dest_path_ui.setText(self.dest_path)
 
     def prepare_download(self):
         # init lists that will store all urls

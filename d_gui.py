@@ -109,7 +109,6 @@ class YoutubeDownloader(QtWidgets.QWidget):
         self.download_button.clicked.connect(self.prepare_download)
 
     def browse(self):
-
         file_dialog = QtWidgets.QFileDialog(self)
         file_dialog.setDirectory(self.dest_path)
         file_dialog.setFileMode(QtWidgets.QFileDialog.DirectoryOnly)

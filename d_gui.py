@@ -118,20 +118,39 @@ class YoutubeDownloader(QtWidgets.QWidget):
                 # Get line edits (aka urls)
                 if type(layout.itemAt(i).widget()) == QtWidgets.QLineEdit:
                     url = layout.itemAt(i).widget().text()
+                # Get checkbox
+                if type(layout.itemAt(i).widget()) == QtWidgets.QCheckBox:
+                    ext = "mp3" if layout.itemAt(i).widget().toggled else "mp4"
 
             # add url to the right list
             if "playlist" in url:
-                url_dict["playlists"][url] = ".mp4"
+                url_dict["playlists"][url] = ext
             else:
-                url_dict["videos"][url] = ".mp4"
+                url_dict["videos"][url] = ext
 
-            # download videos
-            for video in url_dict["videos"].keys():
-                download_video(video, self.dest_path, url_dict["videos"][video])
+        print(url_dict)
 
-            # download playlists
-            for playlist in url_dict["playlists"].keys():
-                download_playlist(playlist, self.dest_path, url_dict["playlists"][video])
+        # download videos
+        for video in url_dict["videos"].keys():
+            try:
+                download_video(
+                    video,
+                    self.dest_path,
+                    url_dict["videos"][video]
+                )
+            except Exception:
+                print("%s failed to download" % video)
+
+        # download playlists
+        for playlist in url_dict["playlists"].keys():
+            try:
+                download_playlist(
+                    playlist,
+                    self.dest_path,
+                    url_dict["playlists"][playlist]
+                )
+            except Exception:
+                print("%s failed to download" % playlist)
 
     def remove_input(self, layout):
         if len(self.inputs.children()) > 1:
@@ -144,11 +163,13 @@ class YoutubeDownloader(QtWidgets.QWidget):
         input_field_layout = QtWidgets.QHBoxLayout()
         label = QtWidgets.QLabel("url: ")
         line_edit = QtWidgets.QLineEdit()
+        extention = QtWidgets.QCheckBox(".mp3")
         add_button = QtWidgets.QPushButton("Add Link")
         remove_button = QtWidgets.QPushButton("Remove link")
 
         input_field_layout.addWidget(label)
         input_field_layout.addWidget(line_edit)
+        input_field_layout.addWidget(extention)
         input_field_layout.addWidget(add_button)
         input_field_layout.addWidget(remove_button)
 

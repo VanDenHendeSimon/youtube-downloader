@@ -99,9 +99,24 @@ class YoutubeDownloader(QtWidgets.QWidget):
 
         self.setLayout(self.main_layout)
 
+        self.download_button.clicked.connect(self.prepare_download)
+
+    def prepare_download(self):
+        # init dict that will store all urls
+        download_dict = {
+            "videos": [],
+            "playlists": []
+        }
+
+        for layout in self.inputs.children():
+            for i in range(layout.count()):
+                print(layout.itemAt(i).widget())
+
     def remove_input(self, layout):
-        for i in reversed(range(layout.count())):
-            layout.itemAt(i).widget().setParent(None)
+        if len(self.inputs.children()) > 1:
+            layout.setParent(None)
+            for i in reversed(range(layout.count())):
+                layout.itemAt(i).widget().setParent(None)
 
     def add_input_field(self):
         # new horizontal box for the new items

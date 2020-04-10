@@ -9,6 +9,25 @@ import re
 from PySide2 import QtWidgets, QtCore, QtGui
 
 
+def extract_streams_from_video(yt):
+    video_streams = []
+    audio_streams = []
+    for stream in yt.streams:
+        if stream.type == "video":
+            if stream.is_progressive:
+                # Strip p and cast to int for sorting
+                video_streams.append((stream, int(stream.resolution[:-1])))
+        elif stream.type == "audio":
+            # Strip kbps and cast to int for sorting
+            audio_streams.append((stream, int(stream.abr[:-4])))
+
+    # Highest resolution / average bit rate will be first in the list
+    video_streams = sorted(video_streams, key=lambda a: a[1], reverse=True)
+    audio_streams = sorted(audio_streams, key=lambda a: a[1], reverse=True)
+
+    return video_streams, audio_streams
+
+
 def convert_video(video_path):
     mp3 = "%s.mp3" % video_path.rstrip(".mp4")
     ffmpeg = ("ffmpeg -i \"%s\" \"%s\" " % (video_path, mp3))
@@ -46,29 +65,19 @@ def download_playlist(link, dest_path, ext):
 
 
 def download_video(link, dest_path, ext):
-    if ext == "mp3":
-        # Get files in the destination folder before downloading
-        files_in_dest_folder = os.listdir(dest_path)
-
-    # Download video
+    # Create youtube object
+    print("Getting youtube object from: %s" % link)
     yt = pytube.YouTube(link)
 
-    video = yt.streams.first()
-    video.download(dest_path)
+    # Extract video and audio streams
+    video_streams, audio_streams = extract_streams_from_video(yt)
+    audio_streams[0][0].download(dest_path)
 
+    print("Downloading")
     if ext == "mp3":
-        # wait a second to ensure the video is ready to convert to mp3
-        time.sleep(1)
-
-        # Get files in the destination folder after downloading
-        updated_files = os.listdir(dest_path)
-        video_title = "unknown.mp4"
-        for _file in updated_files:
-            if _file not in files_in_dest_folder:
-                video_title = _file
-
-        if video_title != "unknown.mp4":
-            convert_video("%s/%s" % (dest_path, video_title))
+        audio_streams[0][0].download(dest_path)
+    else:
+        video_streams[0][0].download(dest_path)
 
 
 class YoutubeDownloader(QtWidgets.QWidget):
@@ -214,8 +223,8 @@ class YoutubeDownloader(QtWidgets.QWidget):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    main = YoutubeDownloader()
-    main.show()
+    yt_downloader = YoutubeDownloader()
+    yt_downloader.show()
     sys.exit(app.exec_())
 
 
